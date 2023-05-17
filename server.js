@@ -1,187 +1,92 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const userController = require("./controllers/userController");
+const orderController = require("./controllers/orderController");
+const productController = require("./controllers/productsController");
+const savedProductController = require("./controllers/savedproductsController");
+const manufacturerController = require("./controllers/manufacturerController");
+const userTypeController = require("./controllers/usertypeController");
+const computerController = require("./controllers/computerController");
+const computerTypeController = require("./controllers/computertypeController");
+const categoryController = require("./controllers/categoryController");
 const app = express();
+
 
 const uri = "mongodb+srv://admin:admin@cluster0.edr434m.mongodb.net/Buildr?retryWrites=true&w=majority";
 
-const userSchema = new mongoose.Schema({
-    first_name: String,
-    last_name: String,
-    username: String,
-    email: String,
-    phone_number: String,
-    birth_date: Date,
-    city: String,
-    password: String,
-    user_type: String,
+mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => {
+    console.log("Connected to MongoDB");
+  })
+  .catch((error) => {
+    console.error("MongoDB connection error:", error);
   });
 
-  const orderSchema = new mongoose.Schema({
-    Order_Id: String,
-    Order_Name: String,
-    Id: mongoose.Schema.Types.ObjectId,
-  });
-  
-  const productSchema = new mongoose.Schema({
-    UPC_Code: String,
-    Product_Name: String,
-    Product_Picture: String,
-    Description: String,
-    Computer_Code: String,
-    Computer_Name: String,
-    Catagory_Code: String,
-    Manufacturer_Code: String,
-  });
-  
-  const savedProductSchema = new mongoose.Schema({
-    UPC_Code: String,
-    Product_Name: String,
-    Product_Picture: String,
-    Description: String,
-    Catagory_Code: String,
-    Manufacturer_Code: String,
-  });
-  
-  const manufacturerSchema = new mongoose.Schema({
-    Manufacturer_Code: String,
-    Manufacturer_Name: String,
-  });
-  
-  const userTypeSchema = new mongoose.Schema({
-    user_type: String,
-  });
-  
-  const computerSchema = new mongoose.Schema({
-    Computer_Code: String,
-    Computer_Name: String,
-  });
-  
-  const computerTypeSchema = new mongoose.Schema({
-    Computer_Code: String,
-    Gaming: Boolean,
-    Office: Boolean,
-    Graphic: Boolean,
-  });
-  
-  const categorySchema = new mongoose.Schema({
-    Catagory_Code: String,
-    Catagory_Name: String,
-  });
+// Users routes
+app.get("/users", userController.getUsers);
+app.post("/users", userController.createUser);
+app.get("/users/:id", userController.getUserById);
+app.put("/users/:id", userController.updateUser);
+app.delete("/users/:id", userController.deleteUser);
 
-//models
-const User = mongoose.model("User", userSchema);
-const Order = mongoose.model("Order", orderSchema);
-const Product = mongoose.model("Product", productSchema);
-const SavedProduct = mongoose.model("SavedProduct", savedProductSchema);
-const Manufacturer = mongoose.model("Manufacturer", manufacturerSchema);
-const UserType = mongoose.model("UserType", userTypeSchema);
-const Computer = mongoose.model("Computer", computerSchema);
-const ComputerType = mongoose.model("ComputerType", computerTypeSchema);
-const Category = mongoose.model("Category", categorySchema);
+// Orders routes
+app.get("/orders", orderController.getOrders);
+app.post("/orders", orderController.createOrder);
+app.get("/orders/:id", orderController.getOrderById);
+app.put("/orders/:id", orderController.updateOrder);
+app.delete("/orders/:id", orderController.deleteOrder);
 
-async function connect(){
-    try{
-        await mongoose.connect(uri)
-        console.log("Connected to MongoDB")
-    }
-    catch(error){
-        console.error(error);
-    }
-}
+// Products routes
+app.get("/products", productController.getProducts);
+app.post("/products", productController.createProduct);
+app.get("/products/:id", productController.getProductById);
+app.put("/products/:id", productController.updateProduct);
+app.delete("/products/:id", productController.deleteProduct);
 
-connect();
+// Saved products routes
+app.get("/saved_products", savedProductController.getSavedProducts);
+app.post("/saved_products", savedProductController.createSavedProduct);
+app.get("/saved_products/:id", savedProductController.getSavedProductById);
+app.put("/saved_products/:id", savedProductController.updateSavedProduct);
+app.delete("/saved_products/:id", savedProductController.deleteSavedProduct);
 
-app.get("/users", async (req, res) => {
-    try {
-      const users = await User.find({});
-      res.json(users);
-    } catch (error) {
-      console.error("User retrieval error:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
+// Manufacturer routes
+app.get("/manufacturer", manufacturerController.getManufacturers);
+app.post("/manufacturer", manufacturerController.createManufacturer);
+app.get("/manufacturer/:id", manufacturerController.getManufacturerById);
+app.put("/manufacturer/:id", manufacturerController.updateManufacturer);
+app.delete("/manufacturer/:id", manufacturerController.deleteManufacturer);
 
-  app.get("/orders", async (req, res) => {
-    try {
-      const orders = await Order.find({});
-      res.json(orders);
-    } catch (error) {
-      console.error("Orders retrieval error:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-  
-  app.get("/products", async (req, res) => {
-    try {
-      const products = await Product.find({});
-      res.json(products);
-    } catch (error) {
-      console.error("Products retrieval error:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-  
-  app.get("/saved_products", async (req, res) => {
-    try {
-      const savedProducts = await SavedProduct.find({});
-      res.json(savedProducts);
-    } catch (error) {
-      console.error("Saved products retrieval error:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-  
-  app.get("/manufacturer", async (req, res) => {
-    try {
-      const manufacturers = await Manufacturer.find({});
-      res.json(manufacturers);
-    } catch (error) {
-      console.error("Manufacturers retrieval error:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-  
-  app.get("/user_types", async (req, res) => {
-    try {
-      const userTypes = await UserType.find({});
-      res.json(userTypes);
-    } catch (error) {
-      console.error("User types retrieval error:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-  
-  app.get("/computer", async (req, res) => {
-    try {
-      const computers = await Computer.find({});
-      res.json(computers);
-    } catch (error) {
-      console.error("Computers retrieval error:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-  
-  app.get("/computer_types", async (req, res) => {
-    try {
-      const computerTypes = await ComputerType.find({});
-      res.json(computerTypes);
-    } catch (error) {
-      console.error("Computer types retrieval error:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-  
-  app.get("/category", async (req, res) => {
-    try {
-      const categories = await Category.find({});
-      res.json(categories);
-    } catch (error) {
-      console.error("Categories retrieval error:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
+// User types routes
+app.get("/user_type", userTypeController.getUserTypes);
+app.post("/user_type", userTypeController.createUserType);
+app.get("/user_type/:id", userTypeController.getUserTypeById);
+app.put("/user_type/:id", userTypeController.updateUserType);
+app.delete("/user_type/:id", userTypeController.deleteUserType);
 
-app.listen(8000, () => {
-    console.log("Server started on port 8000");
-})
+// Computer routes
+app.get("/computer", computerController.getComputers);
+app.post("/computer", computerController.createComputer);
+app.get("/computer/:id", computerController.getComputerById);
+app.put("/computer/:id", computerController.updateComputer);
+app.delete("/computer/:id", computerController.deleteComputer);
 
+// Computer types routes
+app.get("/computer_type", computerTypeController.getComputerTypes);
+app.post("/computer_type", computerTypeController.createComputerType);
+app.get("/computer_type/:id", computerTypeController.getComputerTypeById);
+app.put("/computer_type/:id", computerTypeController.updateComputerType);
+app.delete("/computer_type/:id", computerTypeController.deleteComputerType);
+
+// Category routes
+app.get("/category", categoryController.getCategories);
+app.post("/category", categoryController.createCategory);
+app.get("/category/:id", categoryController.getCategoryById);
+app.put("/category/:id", categoryController.updateCategory);
+app.delete("/category/:id", categoryController.deleteCategory);
+
+
+const port = 3000;
+app.listen(port, () => {
+  console.log(`Server started on port ${port}`);
+});
