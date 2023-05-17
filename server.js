@@ -90,3 +90,30 @@ const port = 3000;
 app.listen(port, () => {
   console.log(`Server started on port ${port}`);
 });
+
+
+//עדיין לא חשבנו על איזה סטטיסטיקות מסוימות אבל ככה זה נעשה
+
+// route to retrieve data
+app.get("/api/data", (req, res) => {
+  // retrieve the data that we  are interested in:
+
+  //Example: retrieve the data from all collections
+  UserController.getUsers(req, res);
+
+  OrderController.getOrders(req, res);
+
+  ProductController.getProducts(req, res);
+
+  CategoryController.getCategories(req, res);
+
+  ComputerController.getComputers(req, res);
+
+  ComputerTypeController.getComputerTypes(req, res);
+
+  ManufacturerController.getManufacturers(req, res);
+
+  SavedProductController.getSavedProducts(req, res);
+
+  UserTypeController.getUserTypes(req, res);
+});
