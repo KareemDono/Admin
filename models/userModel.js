@@ -94,22 +94,32 @@ const getUserById = async (id) => {
 const updateUser = async (id, userData) => {
   try {
     validateUser(userData);
+    userData.birth_date = new Date(userData.birth_date); // Convert birth_date to a Date object
 
     const db = client.db();
-    const updatedUser = await db.collection("users").findOneAndUpdate(
+    const usersCollection = db.collection("users");
+
+    const updatedUser = await usersCollection.findOneAndUpdate(
       { _id: new ObjectId(id) },
       { $set: userData },
       { returnOriginal: false }
     );
+
     if (!updatedUser.value) {
       throw new Error("User not found");
     }
+
     return updatedUser.value;
   } catch (error) {
     console.error("User update error:", error);
-    throw new Error("Internal server error");
+    if (error.message === "User not found") {
+      throw new Error("User not found");
+    } else {
+      throw new Error("Internal server error");
+    }
   }
 };
+
 
 const deleteUser = async (id) => {
   try {
