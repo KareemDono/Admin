@@ -9,14 +9,14 @@ const validateUser = (userData) => {
   const schema = Joi.object({
     Id: Joi.number(),
     first_name: Joi.string().max(20).required(),
-    last_name: Joi.string().max(50).required(),
-    username: Joi.string().max(30).required(),
+    last_name: Joi.string().max(20).required(),
+    username: Joi.string().max(15).required(),
     email: Joi.string().email().max(60).required(),
     phone_number: Joi.number().required(),
     birth_date: Joi.date().iso().required(),
     city: Joi.string().max(20).required(),
-    password: Joi.string().max(30).required(),
-    user_type: Joi.string().max(20).required()
+    password: Joi.string().max(25).required(),
+    user_type: Joi.string().max(5).required()
   }); // Ensure other fields are still required
 
   const validationResult = schema.validate(userData);
@@ -25,17 +25,6 @@ const validateUser = (userData) => {
   }
 };
 
-
-
-
-const connectToMongo = async () => {
-  try {
-    await client.connect();
-    console.log("Connected to MongoDB");
-  } catch (error) {
-    console.error("MongoDB connection error:", error);
-  }
-};
 
 const getUsers = async () => {
   try {
@@ -136,7 +125,6 @@ const deleteUser = async (id) => {
 };
 
 module.exports = {
-  connectToMongo,
   getUsers,
   createUser,
   getUserById,

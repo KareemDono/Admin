@@ -1,6 +1,7 @@
 const UserModel = require("../models/userModel");
+const userRoutes = require('express').Router()
 
-exports.createUser = async (req, res) => {
+userRoutes.createUser = async (req, res) => {
   try {
     const newUser = await UserModel.createUser(req.body);
     res.status(201).json(newUser);
@@ -10,7 +11,8 @@ exports.createUser = async (req, res) => {
   }
 };
 
-exports.getUsers = async (req, res) => {
+
+userRoutes.getUsers = async (req, res) => {
   try {
     const users = await UserModel.getUsers();
     res.json(users);
@@ -20,7 +22,7 @@ exports.getUsers = async (req, res) => {
   }
 };
 
-exports.getUserById = async (req, res) => {
+userRoutes.getUserById = async (req, res) => {
   try {
     const user = await UserModel.getUserById(req.params.id);
     res.json(user);
@@ -34,7 +36,7 @@ exports.getUserById = async (req, res) => {
   }
 };
 
-exports.updateUser = async (req, res) => {
+userRoutes.updateUser = async (req, res) => {
   try {
     const updatedUser = await UserModel.updateUser(req.params.id, req.body);
     res.json(updatedUser);
@@ -48,7 +50,7 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-exports.deleteUser = async (req, res) => {
+userRoutes.deleteUser = async (req, res) => {
   try {
     const result = await UserModel.deleteUser(req.params.id);
     res.json(result);
@@ -61,3 +63,5 @@ exports.deleteUser = async (req, res) => {
     }
   }
 };
+
+module.exports = userRoutes;
