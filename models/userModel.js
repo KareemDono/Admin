@@ -1,19 +1,135 @@
-const mongoose = require("mongoose");
+const { MongoClient, ObjectId } = require("mongodb");
+const Joi = require('joi');
 
-const userSchema = new mongoose.Schema({
-  first_name: String,
-  last_name: String,
-  username: String,
-  email: String,
-  phone_number: String,
-  birth_date: Date,
-  city: String,
-  password: String,
-  user_type: String,
-}, {
-  collection: 'users'
-});
 
-const User = mongoose.model("User", userSchema);
+const uri = "mongodb+srv://admin:admin@cluster0.edr434m.mongodb.net/Buildr?retryWrites=true&w=majority";
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
-module.exports = User;
+const validateUser = (userData) => {
+  const schema = Joi.object({
+    Id: Joi.number(),
+    first_name: Joi.string().max(20).required(),
+    last_name: Joi.string().max(50).required(),
+    username: Joi.string().max(30).required(),
+    email: Joi.string().email().max(60).required(),
+    phone_number: Joi.number().required(),
+    birth_date: Joi.date().iso().required(),
+    city: Joi.string().max(20).required(),
+    password: Joi.string().max(30).required(),
+    user_type: Joi.string().max(20).required()
+  }); // Ensure other fields are still required
+
+  const validationResult = schema.validate(userData);
+  if (validationResult.error) {
+    throw new Error("Invalid user data");
+  }
+};
+
+
+
+
+const connectToMongo = async () => {
+  try {
+    await client.connect();
+    console.log("Connected to MongoDB");
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+  }
+};
+
+const getUsers = async () => {
+  try {
+    const db = client.db();
+    const users = await db.collection("users").find().toArray();
+    return users;
+  } catch (error) {
+    console.error("User retrieval error:", error);
+    throw new Error("Internal server error");
+  }
+};
+
+const createUser = async (userData) => {
+  try {
+    validateUser(userData);
+    userData.birth_date = new Date(userData.birth_date); // Convert birth_date to a Date object
+
+    const db = client.db();
+    const usersCollection = db.collection("users");
+
+    // Find the last user in the database
+    const lastUser = await usersCollection.findOne({}, { sort: { Id: -1 } });
+
+    // Assign the new user's ID based on the presence of existing users
+    const newUserId = lastUser ? lastUser.Id + 1 : 0;
+    userData.Id = newUserId;
+
+    await usersCollection.insertOne(userData);
+
+    // Retrieve the inserted user
+    const insertedUser = await usersCollection.findOne({ Id: newUserId });
+    return insertedUser;
+  } catch (error) {
+    console.error("User creation error:", error);
+    throw new Error("Internal server error");
+  }
+};
+
+
+
+
+const getUserById = async (id) => {
+  try {
+    const db = client.db();
+    const user = await db.collection("users").findOne({ _id: new ObjectId(id) });
+    if (!user) {
+      throw new Error("User not found");
+    }
+    return user;
+  } catch (error) {
+    console.error("User retrieval error:", error);
+    throw new Error("Internal server error");
+  }
+};
+
+const updateUser = async (id, userData) => {
+  try {
+    validateUser(userData);
+
+    const db = client.db();
+    const updatedUser = await db.collection("users").findOneAndUpdate(
+      { _id: new ObjectId(id) },
+      { $set: userData },
+      { returnOriginal: false }
+    );
+    if (!updatedUser.value) {
+      throw new Error("User not found");
+    }
+    return updatedUser.value;
+  } catch (error) {
+    console.error("User update error:", error);
+    throw new Error("Internal server error");
+  }
+};
+
+const deleteUser = async (id) => {
+  try {
+    const db = client.db();
+    const deletedUser = await db.collection("users").findOneAndDelete({ _id: new ObjectId(id) });
+    if (!deletedUser.value) {
+      throw new Error("User not found");
+    }
+    return { message: "User deleted successfully" };
+  } catch (error) {
+    console.error("User deletion error:", error);
+    throw new Error("Internal server error");
+  }
+};
+
+module.exports = {
+  connectToMongo,
+  getUsers,
+  createUser,
+  getUserById,
+  updateUser,
+  deleteUser
+};

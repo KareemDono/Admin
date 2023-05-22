@@ -1,8 +1,8 @@
-const User = require("../models/userModel");
+const UserModel = require("../models/userModel");
 
 exports.createUser = async (req, res) => {
   try {
-    const newUser = await User.create(req.body);
+    const newUser = await UserModel.createUser(req.body);
     res.status(201).json(newUser);
   } catch (error) {
     console.error("User creation error:", error);
@@ -12,7 +12,7 @@ exports.createUser = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
   try {
-    const users = await User.find({});
+    const users = await UserModel.getUsers();
     res.json(users);
   } catch (error) {
     console.error("User retrieval error:", error);
@@ -22,39 +22,42 @@ exports.getUsers = async (req, res) => {
 
 exports.getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    const user = await UserModel.getUserById(req.params.id);
     res.json(user);
   } catch (error) {
     console.error("User retrieval error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    if (error.message === "User not found") {
+      res.status(404).json({ error: "User not found" });
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
   }
 };
 
 exports.updateUser = async (req, res) => {
   try {
-    const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updatedUser) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    const updatedUser = await UserModel.updateUser(req.params.id, req.body);
     res.json(updatedUser);
   } catch (error) {
     console.error("User update error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    if (error.message === "User not found") {
+      res.status(404).json({ error: "User not found" });
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
   }
 };
 
 exports.deleteUser = async (req, res) => {
   try {
-    const deletedUser = await User.findByIdAndRemove(req.params.id);
-    if (!deletedUser) {
-      return res.status(404).json({ error: "User not found" });
-    }
-    res.json({ message: "User deleted successfully" });
+    const result = await UserModel.deleteUser(req.params.id);
+    res.json(result);
   } catch (error) {
     console.error("User deletion error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    if (error.message === "User not found") {
+      res.status(404).json({ error: "User not found" });
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
   }
 };
