@@ -12,7 +12,7 @@ const SplashScreen = ({ navigation }) => {
       duration: 2000,
       useNativeDriver: true,
     }).start(() => {
-      //navigation.replace('IntroductionHomePage');
+      navigation.replace('IntroductionPage');
     });
   }, []);
 
@@ -58,9 +58,8 @@ const styles = StyleSheet.create({
   },
   logoText: {
     marginTop: 10,
-    fontSize: 24,
-    fontFamily: 'CONSOLA', // Replace 'your-tech-font' with your desired tech font
-  },
+    fontSize: 22,
+    },
 });
 
 export default SplashScreen;

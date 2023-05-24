@@ -16,7 +16,7 @@ const validateUser = (userData) => {
     birth_date: Joi.date().iso().required(),
     city: Joi.string().max(20).required(),
     password: Joi.string().max(25).required(),
-    user_type: Joi.string().max(5).required()
+    user_type: Joi.string().max(5)
   }); 
 
   const validationResult = schema.validate(userData);
@@ -42,6 +42,9 @@ const createUser = async (userData) => {
     validateUser(userData);
     userData.birth_date = new Date(userData.birth_date); // Convert birth_date to a Date object
 
+    // Set user_type field as "user"
+    userData.user_type = "user";
+
     const db = client.db();
     const usersCollection = db.collection("users");
 
@@ -62,6 +65,7 @@ const createUser = async (userData) => {
     throw new Error("Internal server error");
   }
 };
+
 
 
 
