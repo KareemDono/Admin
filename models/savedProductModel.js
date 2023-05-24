@@ -11,7 +11,8 @@ const validateSavedProduct = (productData) => {
     Product_Picture: Joi.string().required(),
     Description: Joi.string().max(40).required(),
     Catagory_Code: Joi.number().integer().required(),
-    Manufacturer_Code: Joi.number().integer().required()
+    Manufacturer_Code: Joi.number().integer().required(),
+    savedProductPrice: Joi.number().required()
   });
 
   const validationResult = schema.validate(productData);

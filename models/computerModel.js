@@ -8,6 +8,7 @@ const validateComputer = (computerData) => {
   const schema = Joi.object({
     Computer_Code: Joi.number().required(),
     Computer_Name: Joi.string().max(30).required(),
+    computerPrice: Joi.number().required()
   });
 
   const validationResult = schema.validate(computerData);

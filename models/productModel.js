@@ -13,7 +13,8 @@ const validateProduct = (productData) => {
     Computer_Code: Joi.number().integer().required(),
     Computer_Name: Joi.string().max(30).required(),
     Catagory_Code: Joi.number().integer().required(),
-    Manufacturer_Code: Joi.number().integer().required()
+    Manufacturer_Code: Joi.number().integer().required(),
+    productPrice: Joi.number().required()
   });
 
   const validationResult = schema.validate(productData);
