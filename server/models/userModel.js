@@ -17,7 +17,7 @@ const validateUser = (userData) => {
     city: Joi.string().max(20).required(),
     password: Joi.string().max(25).required(),
     user_type: Joi.string().max(5).required()
-  }); // Ensure other fields are still required
+  }); 
 
   const validationResult = schema.validate(userData);
   if (validationResult.error) {
