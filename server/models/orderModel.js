@@ -8,7 +8,8 @@ const validateOrder = (orderData) => {
   const schema = Joi.object({
     Order_Id: Joi.number().integer().required(),
     Order_Name: Joi.string().max(40).required(),
-    Id: Joi.number().integer().required()
+    Id: Joi.number().integer().required(),
+    orderPrice: Joi.number().required()
   });
 
   const validationResult = schema.validate(orderData);
