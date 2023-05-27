@@ -9,7 +9,7 @@ const SplashScreen = ({ navigation }) => {
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 0,
-      duration: 2000,
+      duration: 5000,
       useNativeDriver: true,
     }).start(() => {
       navigation.replace('IntroductionPage');
