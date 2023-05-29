@@ -7,11 +7,22 @@ import {
   ScrollView,
   TouchableWithoutFeedback,
   Keyboard,
+  Pressable,
+  Platform,
 } from "react-native";
-import { Button, Card, TextInput, Text, Menu, Divider } from "react-native-paper";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import {
+  Button,
+  Card,
+  TextInput,
+  Text,
+  Menu,
+  Divider,
+} from "react-native-paper";
+import { FontAwesome } from "@expo/vector-icons";
 import citiesData from "../utils/il.json";
 import { SvgXml } from "react-native-svg";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { TouchableOpacity } from "react-native-gesture-handler";
 
 const svgBackground = `
   <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 500 150" preserveAspectRatio="none">
@@ -19,51 +30,50 @@ const svgBackground = `
   </svg>
 `;
 
-const validationRules = {
-  firstName: "English Only. No Numbers or Symbols.",
-  lastName: "English Only. No Numbers or Symbols.",
-  email: "Enter a valid email address.",
-  city: "Select a city from the list.",
-  username: "English Only. Maximum 15 characters.",
-  birthDate: "Enter a valid birth date.",
-  phoneNumber: "Enter a valid phone number.",
-  password: "Minimum 8 characters. At least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.",
-  confirmPassword: "Confirm your password.",
-};
-
 const RegisterPage = ({ navigation }) => {
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [filteredCities, setFilteredCities] = useState([]);
   const [cityInput, setCityInput] = useState("");
+  const [cityList, setCityList] = useState([]); // State to store the filtered city list
+  const [isCityListVisible, setCityListVisible] = useState(false); // State to toggle visibility of the city list
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
-  const [birthDate, setBirthDate] = useState("");
+
+  const [birthDate, setBirthDate] = useState(new Date());
+  const [showPicker, setShowPicker] = useState(false);
+
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordsMatch, setPasswordsMatch] = useState(true);
+  const [fieldValidations, setFieldValidations] = useState({
+    firstName: true,
+    lastName: true,
+    email: true,
+    city: true,
+    username: true,
+    phoneNumber: true,
+    password: true,
+    confirmPassword: true,
+  });
 
-  const togglePasswordVisibility = () => {
-    setPasswordVisible(!passwordVisible);
+  const toggleDatepicker = () => {
+    setShowPicker(!showPicker);
   };
 
-  const handleCityFilter = (text) => {
-    setCityInput(text);
-    if (text === "") {
-      setFilteredCities([]);
-    } else {
-      const filtered = citiesData.filter((city) =>
-        city.city.toLowerCase().startsWith(text.toLowerCase())
-      );
-      setFilteredCities(filtered);
+  const onChange = (event, selectedDate) => {
+    if (selectedDate) {
+      setBirthDate(selectedDate);
     }
   };
 
-  const handleCitySelect = (city) => {
-    setCityInput(city);
-    setFilteredCities([]);
+  const confirmIOSDate = () => {
+    toggleDatepicker();
+  };
+
+  const togglePasswordVisibility = () => {
+    setPasswordVisible(!passwordVisible);
   };
 
   const handlePasswordChange = (text) => {
@@ -76,38 +86,58 @@ const RegisterPage = ({ navigation }) => {
     setPasswordsMatch(password === text);
   };
 
+  const filterCities = (input) => {
+    const filteredCities = citiesData.filter(
+      (city) =>
+        city.city && city.city.toLowerCase().includes(input.toLowerCase())
+    );
+    setCityList(filteredCities);
+  };
+  // Function to handle city selection
+  const handleCitySelect = (city) => {
+    setCityInput(city.city);
+    setCityListVisible(false);
+  };
+
+  // Function to handle text input changes for the city field
+  const handleCityChange = (text) => {
+    setCityInput(text);
+    filterCities(text);
+    setCityListVisible(text.length > 0); // Show the city list if there is input text
+  };
+
   const firstNameRef = useRef();
   const lastNameRef = useRef();
   const emailRef = useRef();
   const cityRef = useRef();
   const usernameRef = useRef();
-  const birthDateRef = useRef();
+  const birthDateRef = useRef(null);
   const phoneNumberRef = useRef();
   const passwordRef = useRef();
   const confirmPasswordRef = useRef();
 
   const validateFirstName = (text) => {
     // English Only, a string max of 20 letters.
-    const regex = /^[A-Za-z]{1,20}$/;
+    const regex = /^[A-Za-z]{0,20}$/;
     return regex.test(text);
   };
 
   const validateLastName = (text) => {
     // English Only, a string max of 20 letters.
-    const regex = /^[A-Za-z]{1,20}$/;
+    const regex = /^[A-Za-z]{0,20}$/;
+    return regex.test(text);
+  };
+
+  const validateEmail = (text) => {
+    // English only, mail@domain.com or . any . there is.
+    const regex =
+      /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-]+)(\.[a-zA-Z]{2,5}){1,2}$/;
     return regex.test(text);
   };
 
   const validateUsername = (text) => {
     // Only in English, maximum 15 letters.
-    const regex = /^[A-Za-z]{1,15}$/;
-    return regex.test(text);
-  };
-
-  const validateEmail = (text) => {
-    // English only, mail@domain.com
-    const regex =
-      /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-]+)(\.[a-zA-Z]{2,5}){1,2}$/;
+    const regex = /^[A-Za-z]{0,15}$/;
     return regex.test(text);
   };
 
@@ -128,51 +158,67 @@ const RegisterPage = ({ navigation }) => {
     return regex.test(text);
   };
 
-  const validateBirthDate = (text) => {
-    // /(0[1-9]|1[0-9]|2[0-9]|3[01]).(0[1-9]|1[012]).([19]{2})?([1-9]{2})/
-    const regex =
-      /(0[1-9]|1[0-9]|2[0-9]|3[01]).(0[1-9]|1[012]).([19]{2})?([1-9]{2})/;
-    return regex.test(text);
-  };
-
   const handleFirstNameChange = (text) => {
     setFirstName(text);
+    setFieldValidations((prevValidations) => ({
+      ...prevValidations,
+      firstName: validateFirstName(text),
+    }));
   };
 
   const handleLastNameChange = (text) => {
     setLastName(text);
+    setFieldValidations((prevValidations) => ({
+      ...prevValidations,
+      lastName: validateLastName(text),
+    }));
   };
 
   const handleEmailChange = (text) => {
     setEmail(text);
+    setFieldValidations((prevValidations) => ({
+      ...prevValidations,
+      email: validateEmail(text),
+    }));
   };
 
   const handleUsernameChange = (text) => {
     setUsername(text);
-  };
-
-  const handleBirthDateChange = (text) => {
-    setBirthDate(text);
+    setFieldValidations((prevValidations) => ({
+      ...prevValidations,
+      username: validateUsername(text),
+    }));
   };
 
   const handlePhoneNumberChange = (text) => {
     setPhoneNumber(text);
+    setFieldValidations((prevValidations) => ({
+      ...prevValidations,
+      phoneNumber: validatePhoneNumber(text),
+    }));
   };
 
   const handleRegisterPress = () => {
-    const isValid =
-      validateFirstName(firstName) &&
-      validateLastName(lastName) &&
-      validateEmail(email) &&
-      cityInput !== "" &&
-      validateUsername(username) &&
-      validateBirthDate(birthDate) &&
-      validatePhoneNumber(phoneNumber) &&
-      validatePassword(password) &&
-      confirmPassword !== "";
+    let validations = {
+      firstName: firstName !== "" && validateFirstName(firstName),
+      lastName: lastName !== "" && validateLastName(lastName),
+      email: email !== "" && validateEmail(email),
+      city: cityInput !== "",
+      username: username !== "" && validateUsername(username),
+      phoneNumber: phoneNumber !== "" && validatePhoneNumber(phoneNumber),
+      password: password !== "" && validatePassword(password),
+      confirmPassword: confirmPassword !== "",
+      birthDate: true, // Assume birth date is always valid
+    };
+
+    setFieldValidations(validations);
+
+    const isValid = Object.values(validations).every((valid) => valid);
 
     if (isValid) {
       // Perform registration logic
+    } else {
+      setFieldValidations(validations);
     }
   };
 
@@ -197,114 +243,157 @@ const RegisterPage = ({ navigation }) => {
                   <TextInput
                     label="First Name"
                     mode="outlined"
-                    style={styles.input}
+                    style={[
+                      styles.input,
+                      !fieldValidations.firstName && styles.inputError,
+                    ]}
+                    error={!fieldValidations.firstName}
                     returnKeyType="next"
                     onSubmitEditing={() => lastNameRef.current.focus()}
                     value={firstName}
                     onChangeText={handleFirstNameChange}
                   />
-                  {!validateFirstName(firstName) && (
-                    <Text style={styles.validationText}>
-                      {validationRules.firstName}
-                    </Text>
-                  )}
                 </View>
                 <View style={styles.inputContainer}>
                   <TextInput
                     ref={lastNameRef}
                     label="Last Name"
                     mode="outlined"
-                    style={styles.input}
+                    style={[
+                      styles.input,
+                      !fieldValidations.lastName && styles.inputError,
+                    ]}
+                    error={!fieldValidations.lastName}
                     returnKeyType="next"
                     onSubmitEditing={() => emailRef.current.focus()}
                     value={lastName}
                     onChangeText={handleLastNameChange}
                   />
-                  {!validateLastName(lastName) && (
-                    <Text style={styles.validationText}>
-                      {validationRules.lastName}
-                    </Text>
-                  )}
                 </View>
               </View>
-              <TextInput
-                ref={emailRef}
-                label="Email"
-                mode="outlined"
-                style={styles.input}
-                keyboardType="email-address"
-                returnKeyType="next"
-                onSubmitEditing={() => cityRef.current.focus()}
-                value={email}
-                onChangeText={handleEmailChange}
-              />
               <View style={styles.row}>
                 <View style={styles.inputContainer}>
                   <TextInput
                     ref={cityRef}
                     label="City"
                     mode="outlined"
-                    style={styles.input}
+                    style={[
+                      styles.input,
+                      !fieldValidations.city && styles.inputError,
+                    ]}
+                    error={!fieldValidations.city}
                     value={cityInput}
-                    onChangeText={handleCityFilter}
+                    onChangeText={handleCityChange}
                     returnKeyType="next"
                     onSubmitEditing={() => usernameRef.current.focus()}
                   />
-                  {!cityInput && (
-                    <Text style={styles.validationText}>
-                      {validationRules.city}
-                    </Text>
+                  {isCityListVisible && (
+                    <View style={styles.cityListContainer}>
+                      <ScrollView style={styles.cityList}>
+                        {cityList.map((city) => (
+                          <TouchableWithoutFeedback
+                            key={city.id}
+                            onPress={() => handleCitySelect(city)}
+                          >
+                            <View style={styles.cityListItemContainer}>
+                              <Text style={styles.cityListItem}>
+                                {city.city}
+                              </Text>
+                            </View>
+                          </TouchableWithoutFeedback>
+                        ))}
+                      </ScrollView>
+                    </View>
                   )}
-                  <Menu>
-                    <ScrollView style={styles.menu}>
-                      {filteredCities.map((city, index) => (
-                        <React.Fragment key={index}>
-                          <Menu.Item
-                            onPress={() => handleCitySelect(city.city)}
-                            title={city.city}
-                          />
-                          {index !== filteredCities.length - 1 && (
-                            <Divider style={styles.divider} />
-                          )}
-                        </React.Fragment>
-                      ))}
-                    </ScrollView>
-                  </Menu>
                 </View>
+              </View>
+              <View style={styles.row}>
                 <View style={styles.inputContainer}>
                   <TextInput
                     ref={usernameRef}
                     label="Username"
                     mode="outlined"
-                    style={styles.input}
+                    style={[
+                      styles.input,
+                      !fieldValidations.username && styles.inputError,
+                    ]}
+                    error={!fieldValidations.username}
                     returnKeyType="next"
                     onSubmitEditing={() => birthDateRef.current.focus()}
                     value={username}
                     onChangeText={handleUsernameChange}
                   />
-                  {!validateUsername(username) && (
-                    <Text style={styles.validationText}>
-                      {validationRules.username}
-                    </Text>
-                  )}
                 </View>
               </View>
-              <TextInput
-                ref={birthDateRef}
-                label="Birth Date"
-                mode="outlined"
-                style={styles.input}
-                keyboardType="numeric"
-                returnKeyType="next"
-                onSubmitEditing={() => phoneNumberRef.current.focus()}
-                value={birthDate}
-                onChangeText={handleBirthDateChange}
-              />
+
+              {showPicker && (
+                <DateTimePicker
+                  mode="date"
+                  display="spinner"
+                  value={birthDate}
+                  onChange={onChange}
+                  style={styles.datePicker}
+                  maximumDate={new Date("2005-1-1")}
+                  minimumDate={new Date("1923-1-1")}
+                />
+              )}
+
+              {showPicker && Platform.OS === "ios" && (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-around",
+                  }}
+                >
+                  <TouchableOpacity
+                    style={[
+                      styles.button,
+                      styles.pickerButton,
+                      { backgroundColor: "#11182711" },
+                    ]}
+                    onPress={toggleDatepicker}
+                  >
+                    <Text style={[styles.buttonText, { color: "#075985" }]}>
+                      Cancel{" "}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.button, styles.pickerButton]}
+                    onPress={confirmIOSDate}
+                  >
+                    <Text style={[styles.buttonText]}>Confirm</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              {!showPicker && (
+                <Pressable onPress={toggleDatepicker}>
+                  <TextInput
+                    ref={birthDateRef}
+                    label="Birth Date"
+                    mode="outlined"
+                    style={[
+                      styles.input,
+                      !fieldValidations.birthDate && styles.inputError,
+                    ]}
+                    error={!fieldValidations.birthDate}
+                    returnKeyType="next"
+                    onSubmitEditing={() => phoneNumberRef.current.focus()}
+                    value={birthDate.toDateString()} // Convert Date object to string for display
+                    editable={false}
+                    onPressIn={toggleDatepicker}
+                  />
+                </Pressable>
+              )}
               <TextInput
                 ref={phoneNumberRef}
                 label="Phone Number"
                 mode="outlined"
-                style={styles.input}
+                style={[
+                  styles.input,
+                  !fieldValidations.phoneNumber && styles.inputError,
+                ]}
+                error={!fieldValidations.phoneNumber}
                 keyboardType="numeric"
                 returnKeyType="next"
                 onSubmitEditing={() => passwordRef.current.focus()}
@@ -317,13 +406,17 @@ const RegisterPage = ({ navigation }) => {
                     ref={passwordRef}
                     label="Password"
                     mode="outlined"
-                    style={styles.input}
+                    style={[
+                      styles.input,
+                      !fieldValidations.password && styles.inputError,
+                    ]}
+                    error={!fieldValidations.password}
                     secureTextEntry={!passwordVisible}
                     right={
                       <TextInput.Icon
                         name={passwordVisible ? "eye-off" : "eye"}
                         onPress={togglePasswordVisibility}
-                        color="gray"
+                        color="black"
                       />
                     }
                     value={password}
@@ -331,24 +424,25 @@ const RegisterPage = ({ navigation }) => {
                     returnKeyType="next"
                     onSubmitEditing={() => confirmPasswordRef.current.focus()}
                   />
-                  {!validatePassword(password) && (
-                    <Text style={styles.validationText}>
-                      {validationRules.password}
-                    </Text>
-                  )}
                 </View>
+              </View>
+              <View style={styles.row}>
                 <View style={styles.inputContainer}>
                   <TextInput
                     ref={confirmPasswordRef}
-                    label="Confirm Pass"
+                    label="Confirm Password"
                     mode="outlined"
-                    style={styles.input}
+                    style={[
+                      styles.input,
+                      !fieldValidations.confirmPassword && styles.inputError,
+                    ]}
+                    error={!fieldValidations.confirmPassword}
                     secureTextEntry={!passwordVisible}
                     right={
                       <TextInput.Icon
                         name={passwordVisible ? "eye-off" : "eye"}
                         onPress={togglePasswordVisibility}
-                        color="gray"
+                        color="black"
                       />
                     }
                     value={confirmPassword}
@@ -356,19 +450,14 @@ const RegisterPage = ({ navigation }) => {
                     returnKeyType="done"
                     onSubmitEditing={handleRegisterPress}
                   />
-                  {!confirmPassword && (
-                    <Text style={styles.validationText}>
-                      {validationRules.confirmPassword}
-                    </Text>
-                  )}
-                  {!passwordsMatch && confirmPassword !== "" && (
-                    <Text style={styles.validationText}>*Passwords do not match</Text>
-                  )}
-                  {passwordsMatch && password.length > 0 && confirmPassword.length > 0 && (
-                    <Text style={styles.validationText}>*Passwords match</Text>
-                  )}
                 </View>
               </View>
+              {!passwordsMatch && (
+                <Text style={styles.errorText}>Passwords do not match</Text>
+              )}
+              {passwordsMatch && password.length > 0 && (
+                <Text style={styles.successText}>Passwords match</Text>
+              )}
             </Card.Content>
             <Card.Actions
               style={[
@@ -403,6 +492,41 @@ const RegisterPage = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  cityListContainer: {
+    borderWidth: 1,
+    borderColor: "gray",
+    borderRadius: 4,
+    marginTop: 5,
+    elevation: 2,
+    backgroundColor: "transparent", // Set the background color to transparent
+  },
+
+  cityList: {
+    maxHeight: 150,
+  },
+  cityListItem: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    fontSize: 14,
+    color: "black",
+  },
+  cityListItemContainer: {
+    borderBottomWidth: 1,
+    borderBottomColor: "black",
+  },
+  
+  buttonText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#fff",
+  },
+  datePicker: {
+    height: 120,
+    marginTop: -10,
+  },
+  pickerButton: {
+    paddingHorizontal: 20,
+  },
   menuContainer: {
     flex: 1,
   },
@@ -495,10 +619,12 @@ const styles = StyleSheet.create({
     backgroundColor: "black",
     height: 1,
   },
-  validationText: {
-    color: "gray",
-    marginBottom: 5,
-    fontSize: 12,
+  errorText: {
+    color: "red",
+    marginBottom: 10,
+  },
+  inputError: {
+    borderColor: "red",
   },
 });
 
